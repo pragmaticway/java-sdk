@@ -39,6 +39,7 @@ import com.optimizely.ab.event.internal.EventBuilderV1;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.ProjectValidationUtils;
+import com.optimizely.ab.internal.ReservedEventKey;
 import com.optimizely.ab.notification.NotificationListener;
 import com.optimizely.ab.notification.NotificationBroadcaster;
 
@@ -225,61 +226,92 @@ public class Optimizely {
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId) throws UnknownEventTypeException {
-        track(eventName, userId, Collections.<String, String>emptyMap(), null, null);
+        track(eventName, userId, Collections.<String, String>emptyMap(), Collections.<String, Object>emptyMap());
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the sessionId as an event tag instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        track(eventName, userId, Collections.<String, String>emptyMap(), null, sessionId);
+        Map<String, String>tags = new HashMap<String, String>();
+        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        track(eventName, userId, Collections.<String, String>emptyMap(), tags);
     }
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes) throws UnknownEventTypeException {
-        track(eventName, userId, attributes, null, null);
+        track(eventName, userId, attributes, Collections.<String, String>emptyMap());
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the sessionId as an event tag instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        track(eventName, userId, attributes, null, sessionId);
+        Map<String, String>tags = new HashMap<String, String>();
+        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        track(eventName, userId, attributes, tags);
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the revenue value as an event tag instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       long eventValue) throws UnknownEventTypeException {
-        track(eventName, userId, Collections.<String, String>emptyMap(), eventValue);
+        Map<String, Object>tags = new HashMap<String, Object>();
+        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, Collections.<String, String>emptyMap(), tags);
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the revenue value and sessionId as event tags instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       long eventValue,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
+        Map<String, Object>tags = new HashMap<String, Object>();
+        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
         track(eventName, userId, Collections.<String, String>emptyMap(), eventValue, sessionId);
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the revenue value as an event tag instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       long eventValue) throws UnknownEventTypeException {
-        track(eventName, userId, attributes, (Long)eventValue, null);
+        Map<String, Object>tags = new HashMap<String, Object>();
+        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, attributes, tags);
     }
 
+    /**
+     * @deprecated see {@link #track(String, String, Map, Map)} and pass in the revenue value and sessionId as event tags instead.
+     */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       long eventValue,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        track(eventName, userId, attributes, (Long)eventValue, sessionId);
+        Map<String, Object>tags = new HashMap<String, Object>();
+        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, attributes, tags);
     }
 
-    private void track(@Nonnull String eventName,
+    public void track(@Nonnull String eventName,
                        @Nonnull String userId,
                        @Nonnull Map<String, String> attributes,
-                       @CheckForNull Long eventValue,
-                       @CheckForNull String sessionId) throws UnknownEventTypeException {
+                       @Nonnull Map<String, ?> tags) throws UnknownEventTypeException {
 
         ProjectConfig currentConfig = getProjectConfig();
 
