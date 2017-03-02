@@ -208,9 +208,9 @@ public class Optimizely {
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        Map<String, String>tags = new HashMap<String, String>();
-        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
-        track(eventName, userId, Collections.<String, String>emptyMap(), tags);
+        Map<String, String>eventTags = new HashMap<String, String>();
+        eventTags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        track(eventName, userId, Collections.<String, String>emptyMap(), eventTags);
     }
 
     public void track(@Nonnull String eventName,
@@ -226,9 +226,9 @@ public class Optimizely {
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        Map<String, String>tags = new HashMap<String, String>();
-        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
-        track(eventName, userId, attributes, tags);
+        Map<String, String> eventTags = new HashMap<String, String>();
+        eventTags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        track(eventName, userId, attributes, eventTags);
     }
 
     /**
@@ -237,9 +237,9 @@ public class Optimizely {
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
                       long eventValue) throws UnknownEventTypeException {
-        Map<String, Object>tags = new HashMap<String, Object>();
-        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
-        track(eventName, userId, Collections.<String, String>emptyMap(), tags);
+        Map<String, Object>eventTags = new HashMap<String, Object>();
+        eventTags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, Collections.<String, String>emptyMap(), eventTags);
     }
 
     /**
@@ -249,10 +249,10 @@ public class Optimizely {
                       @Nonnull String userId,
                       long eventValue,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        Map<String, Object>tags = new HashMap<String, Object>();
-        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
-        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
-        track(eventName, userId, Collections.<String, String>emptyMap(), eventValue, sessionId);
+        Map<String, Object>eventTags = new HashMap<String, Object>();
+        eventTags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        eventTags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, Collections.<String, String>emptyMap(), eventTags);
     }
 
     /**
@@ -262,9 +262,9 @@ public class Optimizely {
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       long eventValue) throws UnknownEventTypeException {
-        Map<String, Object>tags = new HashMap<String, Object>();
-        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
-        track(eventName, userId, attributes, tags);
+        Map<String, Object>eventTags = new HashMap<String, Object>();
+        eventTags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, attributes, eventTags);
     }
 
     /**
@@ -275,16 +275,16 @@ public class Optimizely {
                       @Nonnull Map<String, String> attributes,
                       long eventValue,
                       @CheckForNull String sessionId) throws UnknownEventTypeException {
-        Map<String, Object>tags = new HashMap<String, Object>();
-        tags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
-        tags.put(ReservedEventKey.REVENUE.toString(), eventValue);
-        track(eventName, userId, attributes, tags);
+        Map<String, Object>eventTags = new HashMap<String, Object>();
+        eventTags.put(ReservedEventKey.SESSION_ID.toString(), sessionId);
+        eventTags.put(ReservedEventKey.REVENUE.toString(), eventValue);
+        track(eventName, userId, attributes, eventTags);
     }
 
     public void track(@Nonnull String eventName,
                        @Nonnull String userId,
                        @Nonnull Map<String, String> attributes,
-                       @Nonnull Map<String, ?> tags) throws UnknownEventTypeException {
+                       @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
 
         ProjectConfig currentConfig = getProjectConfig();
 
@@ -302,7 +302,7 @@ public class Optimizely {
         // create the conversion event request parameters, then dispatch
         LogEvent conversionEvent = eventBuilder.createConversionEvent(currentConfig, bucketer, userId,
                                                                       eventType.getId(), eventType.getKey(), attributes,
-                                                                      tags);
+                                                                      eventTags);
 
         if (conversionEvent == null) {
             logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
@@ -319,7 +319,7 @@ public class Optimizely {
             logger.error("Unexpected exception in event dispatcher", e);
         }
 
-        Long eventValue = EventTagUtils.getRevenueValue(tags);
+        Long eventValue = EventTagUtils.getRevenueValue(eventTags);
         notificationBroadcaster.broadcastEventTracked(eventName, userId, attributes, eventValue,
                                                       conversionEvent);
     }
