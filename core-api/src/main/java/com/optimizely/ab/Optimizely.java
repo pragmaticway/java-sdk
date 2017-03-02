@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely and contributors
+ *    Copyright 2016,2017 Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV1;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
+import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.internal.ReservedEventKey;
 import com.optimizely.ab.notification.NotificationListener;
@@ -120,20 +121,7 @@ public class Optimizely {
 
     public @Nullable Variation activate(@Nonnull String experimentKey,
                                         @Nonnull String userId,
-                                        @CheckForNull String sessionId) throws UnknownExperimentException {
-        return activate(experimentKey, userId, Collections.<String, String>emptyMap(), sessionId);
-    }
-
-    public @Nullable Variation activate(@Nonnull String experimentKey,
-                                        @Nonnull String userId,
                                         @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
-        return activate(experimentKey, userId, attributes, null);
-    }
-
-    public @Nullable Variation activate(@Nonnull String experimentKey,
-                                        @Nonnull String userId,
-                                        @Nonnull Map<String, String> attributes,
-                                        @CheckForNull String sessionId) throws UnknownExperimentException {
 
         if (!validateUserId(userId)) {
             logger.info("Not activating user for experiment \"{}\".", experimentKey);
@@ -149,7 +137,7 @@ public class Optimizely {
             return null;
         }
 
-        return activate(currentConfig, experiment, userId, attributes, sessionId);
+        return activate(currentConfig, experiment, userId, attributes);
     }
 
     public @Nullable Variation activate(@Nonnull Experiment experiment,
@@ -159,32 +147,17 @@ public class Optimizely {
 
     public @Nullable Variation activate(@Nonnull Experiment experiment,
                                         @Nonnull String userId,
-                                        @CheckForNull String sessionId) {
-        return activate(experiment, userId, Collections.<String, String>emptyMap(), sessionId);
-    }
-
-    public @Nullable Variation activate(@Nonnull Experiment experiment,
-                                        @Nonnull String userId,
                                         @Nonnull Map<String, String> attributes) {
-
-        return activate(experiment, userId, attributes, null);
-    }
-
-    public @Nullable Variation activate(@Nonnull Experiment experiment,
-                                        @Nonnull String userId,
-                                        @Nonnull Map<String, String> attributes,
-                                        @CheckForNull String sessionId) {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        return activate(currentConfig, experiment, userId, attributes, sessionId);
+        return activate(currentConfig, experiment, userId, attributes);
     }
 
     private @Nullable Variation activate(@Nonnull ProjectConfig projectConfig,
                                          @Nonnull Experiment experiment,
                                          @Nonnull String userId,
-                                         @Nonnull Map<String, String> attributes,
-                                         @CheckForNull String sessionId) {
+                                         @Nonnull Map<String, String> attributes) {
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.
         attributes = filterAttributes(projectConfig, attributes);
@@ -203,7 +176,7 @@ public class Optimizely {
 
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventBuilder.createImpressionEvent(projectConfig, experiment, variation, userId,
-                                                                          attributes, sessionId);
+                                                                          attributes);
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
             logger.debug(
                 "Dispatching impression event to URL {} with params {} and payload \"{}\".",
@@ -329,7 +302,7 @@ public class Optimizely {
         // create the conversion event request parameters, then dispatch
         LogEvent conversionEvent = eventBuilder.createConversionEvent(currentConfig, bucketer, userId,
                                                                       eventType.getId(), eventType.getKey(), attributes,
-                                                                      eventValue, sessionId);
+                                                                      tags);
 
         if (conversionEvent == null) {
             logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
@@ -346,6 +319,7 @@ public class Optimizely {
             logger.error("Unexpected exception in event dispatcher", e);
         }
 
+        Long eventValue = EventTagUtils.getRevenueValue(tags);
         notificationBroadcaster.broadcastEventTracked(eventName, userId, attributes, eventValue,
                                                       conversionEvent);
     }
